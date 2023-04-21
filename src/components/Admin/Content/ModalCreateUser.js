@@ -3,10 +3,22 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { FcPlus } from 'react-icons/fc';
 
-const ModalCreateUser = () => {
-    const [show, setShow] = useState(false);
+import { postCreateNewUser } from '../../../services/apiServices'
 
-    const handleClose = () => setShow(false);
+import { ToastContainer, toast } from 'react-toastify';
+const ModalCreateUser = (props) => {
+    const { show, setShow } = props;
+    // const [show, setShow] = useState(false);
+
+    const handleClose = () => {
+        setShow(false)
+        setEmail("")
+        setPassword("")
+        setUsername("")
+        setRole("USER")
+        setImage("")
+        setPreviewImage("")
+    };
     const handleShow = () => setShow(true);
 
     const [email, setEmail] = useState("")
@@ -24,11 +36,46 @@ const ModalCreateUser = () => {
 
         else setPreviewImage("")
     }
+
+    const validateEmail = (email) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
+
+
+    const handleSubmitCreateUser = async () => {
+
+        const isValidEmail = validateEmail(email)
+        if (!isValidEmail) {
+            toast.error("invalid email")
+            return;
+        }
+        if (!password) {
+            toast.error("invalid password")
+            return;
+        }
+
+
+
+        let data = await postCreateNewUser(email, password, username, role, image);
+        console.log(data)
+        if (data && data.EC === "0") {
+            toast.success(data.EM)
+            handleClose();
+        }
+        if (data && data.EC !== "0") {
+            toast.error(data.EM)
+        }
+
+    }
     return (
         <>
-            <Button variant="primary" onClick={handleShow}>
+            {/* <Button variant="primary" onClick={handleShow}>
                 Launch demo modal
-            </Button>
+            </Button> */}
 
             <Modal
                 show={show} onHide={handleClose} size='xl'
@@ -58,9 +105,9 @@ const ModalCreateUser = () => {
                         </div>
                         <div className="col-md-4">
                             <label className="form-label">Role</label>
-                            <select className="form-select" onChange={(event) => setRole(event.target.vale)}>
+                            <select className="form-select" onChange={(event) => setRole(event.target.value)}>
                                 <option value="USER">USER</option>
-                                <option>ADMIN</option>
+                                <option value="ADMIN">ADMIN</option>
                             </select>
                         </div>
                         <div className='col-md-12'>
@@ -85,11 +132,11 @@ const ModalCreateUser = () => {
                     <Button variant="secondary" onClick={handleClose}>
                         Close
                     </Button>
-                    <Button variant="primary" onClick={handleClose}>
+                    <Button variant="primary" onClick={() => handleSubmitCreateUser()}>
                         Save
                     </Button>
                 </Modal.Footer>
-            </Modal>
+            </Modal >
         </>
     );
 }
